@@ -41,11 +41,12 @@ REFERENCES Renewal(RenewalID)
 
 CREATE TABLE MemberInterest
 (
+InterestID int not null IDENTITY(1, 1),
 MemberID int not null,
-Interest1 varchar(20) not null,
-Interest2 varchar(20),
-Interest3 varchar(20),
-PRIMARY KEY (MemberID)
+Interest varchar(20) not null,
+PRIMARY KEY (InterestID),
+CONSTRAINT FK_MemberNotSelected FOREIGN KEY (MemberID)
+REFERENCES Members(MemberID)
 )
 
 CREATE TABLE MemberAddress
@@ -202,3 +203,37 @@ INSERT INTO PaymentCard (MemberID, CardType, CardNumber, CardExpiration)
 ('14',	'Diners-Club-Carte-Blanche',	'30414677064054',	'2018-06-01'),
 ('15',	'JCB',	'3542828093985763',	'2020-03-01')
 
+INSERT INTO MemberInterest (MemberID, Interest)
+	VALUES ('1',	'Acting'),
+('1',	'Video Games'),
+('1',	'Crossword Puzzles'),
+('2',	'Calligraphy'),
+('3',	'Movies'),
+('3',	'Restaurants'),
+('3',	'Woodworking'),
+('4',	'Juggling'),
+('4',	'Quilting'),
+('5',	'Electronics'),
+('6',	'Sewing'),
+('6',	'Cooking'),
+('6',	'Movies'),
+('7',	'Botany'),
+('7',	'Skating'),
+('8',	'Dancing'),
+('8',	'Coffee'),
+('8',	'Foreign Languages'),
+('9',	'Fashion'),
+('10',	'Woodworking'),
+('11',	'Homebrewing'),
+('11',	'Geneology'),
+('11',	'Movies'),
+('11',	'Scrapbooking'),
+('12',	'Surfing'),
+('12',	'Amateur Radio'),
+('13',	'Computers'),
+('14',	'Writing'),
+('14',	'Singing'),
+('15',	'Reading'),
+('15',	'Pottery')
+
+select * from MemberInterest
