@@ -433,7 +433,7 @@ INSERT INTO Transactions (CardID, TransactionDate, Charge, Result)
 ('114',	'2016-04-15',	'9.99',	'Approved')
 
 --=============================================------------
-
+GO
 CREATE VIEW vwMemberContactList
 AS
 select concat(LastName, ', ', FirstName) [Member Name], ma.AddressLine1, ma.AddressLine2,
@@ -457,3 +457,8 @@ from Members
 where DATENAME(month, birthdate) = DATENAME(month, getdate())
 GO
 
+select CardID ,sum(charge) [Charge Per Month]
+ from Transactions
+where DATENAME(month, transactiondate) = DATENAME(Month, getdate())
+group by CardID
+order by CardID
