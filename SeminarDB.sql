@@ -457,8 +457,43 @@ from Members
 where DATENAME(month, birthdate) = DATENAME(month, getdate())
 GO
 
+CREATE PROCEDURE sp_MonthlyIncome
+	
+	@StartDate date,
+	@EndDate date
+	AS
+	BEGIN
+select sum(t.charge) [Income]
+from Transactions t
+where t.TransactionDate between @StartDate and @EndDate
+
+END 
+GO
+
+exec sp_MonthlyIncome '2016-02-01', '2016-02-28'
+
 select CardID ,sum(charge) [Charge Per Month]
  from Transactions
 where DATENAME(month, transactiondate) = DATENAME(Month, getdate())
 group by CardID
 order by CardID
+
+CREATE PROCEDURE sp_AttendancePerEvent
+	
+	@StartDate date,
+	@EndDate date
+	AS
+	BEGIN
+select e.EventID, count(memberid) [Amount Attended], e.EventName, e.EventDate
+from EventAttendance ea
+inner join
+[Events] e
+on e.EventID = ea.EventID
+where e.EventDate between @StartDate and @EndDate
+group by e.EventID, e.EventName, e.EventDate
+
+
+END 
+GO
+
+exec sp_AttendancePerEvent '2017-01-12', '2017-02-22'
