@@ -433,6 +433,8 @@ INSERT INTO Transactions (CardID, TransactionDate, Charge, Result)
 ('114',	'2016-04-15',	'9.99',	'Approved')
 
 --=============================================------------
+
+--===========================CONTACT LIST===========================--
 GO
 CREATE VIEW vwMemberContactList
 AS
@@ -444,11 +446,14 @@ MemberAddress ma
 on m.MemberID = ma.MemberID
 GO
 
+--===========================Email List===========================--
 CREATE VIEW vwMemberEmailList
 AS
 select concat(lastname, ', ', firstname) [Member Name], Email
 from Members
 GO
+
+--===========================Member Birthdays===========================--
 
 CREATE VIEW vwMemberMonthlyBirthdays
 AS
@@ -457,6 +462,44 @@ from Members
 where DATENAME(month, birthdate) = DATENAME(month, getdate())
 GO
 
+--===========================Renewals===========================--
+
+
+select pc.* ,dateadd(MONTH, 1 ,StartDate) [Renewal Date]
+from Members m
+inner join
+paymentcard pc
+on pc.memberid = m.MemberID
+where CurrentFlag <> 0 and RenewalID = 4
+
+select pc.* ,dateadd(MONTH, 3 ,StartDate) [Renewal Date]
+from Members m
+inner join
+paymentcard pc
+on pc.memberid = m.MemberID
+where CurrentFlag <> 0 and RenewalID = 3
+
+select pc.* 
+from Members m
+inner join
+paymentcard pc
+on pc.memberid = m.MemberID
+where CurrentFlag <> 0 and DATEPART(month, startdate) = DATEPART(MONTH, getdate()) and
+							datepart(day, startdate) = DATEPART(day, getdate()) and	
+							RenewalID = 2
+
+select * from Members
+
+--===========================Expired Cards===========================--
+
+CREATE VIEW vwExpiredCards
+AS
+select *
+from PaymentCard
+where CardExpiration < GETDATE()
+GO
+
+--===========================Monthly Income===========================--
 CREATE PROCEDURE sp_MonthlyIncome
 	
 	@StartDate date,
@@ -468,15 +511,25 @@ from Transactions t
 where t.TransactionDate between @StartDate and @EndDate
 
 END 
+
+GO
+--===========================Member Sign Ups===========================--
+CREATE PROCEDURE sp_MemberSignUps
+	
+	@StartDate date,
+	@EndDate date
+	AS
+	BEGIN
+select count(memberid) [Number of Sign Ups]
+from Members
+where StartDate between @StartDate and @EndDate
+
+END 
 GO
 
-exec sp_MonthlyIncome '2016-02-01', '2016-02-28'
+--exec sp_MemberSignUps '2016-01-01', '2016-01-31'
 
-select CardID ,sum(charge) [Charge Per Month]
- from Transactions
-where DATENAME(month, transactiondate) = DATENAME(Month, getdate())
-group by CardID
-order by CardID
+--===========================Attendance Per Event===========================--
 
 CREATE PROCEDURE sp_AttendancePerEvent
 	
@@ -492,8 +545,7 @@ on e.EventID = ea.EventID
 where e.EventDate between @StartDate and @EndDate
 group by e.EventID, e.EventName, e.EventDate
 
-
 END 
 GO
 
-exec sp_AttendancePerEvent '2017-01-12', '2017-02-22'
+PRINT 'DATABASE LOADED SUCCESSFULLY'
