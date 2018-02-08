@@ -434,6 +434,7 @@ INSERT INTO Transactions (CardID, TransactionDate, Charge, Result)
 
 
 --=============================================------------
+GO
 CREATE VIEW vwRenewal
 AS
 select m.memberid, m.FirstName, m.LastName, m.StartDate, m.RenewalID, r.RenewalPrice, pc.CardID
@@ -542,7 +543,7 @@ CREATE PROCEDURE sp_Renewal
 	END
 
 --===========================Expired Cards===========================--
-
+GO
 CREATE VIEW vwExpiredCards
 AS
 select *
