@@ -1,16 +1,19 @@
+--Drops database if already existing
  USE MASTER
 if (select count(*) 
     from sys.databases where name = 'Seminar') > 0
 BEGIN
 		DROP DATABASE Seminar;
 END
-
+--Creates Database
 CREATE DATABASE Seminar;
 GO
 USE Seminar;
-
+--Changes DB Owner
 exec sp_changedbowner 'sa'
 
+
+--Creates all magical tables for the database
 CREATE TABLE Renewal
 (
 RenewalID int not null IDENTITY(1, 1),
@@ -148,6 +151,7 @@ REFERENCES Members(MemberID)
 
 --==============================================INSERTS========================================================--
 
+--Inserts into all the magical tables...puts in the magical information (inserts are self explainatory)
 INSERT INTO Renewal (RenewalType, RenewalPrice)
 VALUES ('2 Year Plan', 189.00),
 		('1 Year Plan', 99.00),
@@ -434,6 +438,9 @@ INSERT INTO Transactions (CardID, TransactionDate, Charge, Result)
 
 
 --=============================================------------
+
+--Creates a view that displays all members and their required information that are due for a renewal.
+--I created this to make my stored procedure simple.
 GO
 CREATE VIEW vwRenewal
 AS
@@ -495,6 +502,8 @@ GO
 
 		
 --===========================CONTACT LIST===========================--
+
+
 GO
 CREATE VIEW vwMemberContactList
 AS
@@ -523,6 +532,8 @@ where DATENAME(month, birthdate) = DATENAME(month, getdate())
 GO
 
 --===========================Renewals===========================--
+
+--This uses the renwal view mentioned earlier
 CREATE PROCEDURE sp_Renewal
 
 	AS
@@ -614,7 +625,7 @@ CREATE TABLE Passwords
 	
 	GO
 	--Password Procedure that inserts new password
-CREATE PROCEDURE NewPassword
+CREATE PROCEDURE sp_NewPassword
     @pLogin NVARCHAR(50), 
     @pPassword NVARCHAR(50), 
     @pFirstName NVARCHAR(40) = NULL, 
@@ -651,4 +662,69 @@ END
 --FROM Passwords
 
 
+--Password Authentication
+
+GO
+CREATE PROCEDURE sp_UserAccount
+    @LoginName NVARCHAR(50),
+    @Password NVARCHAR(50),
+    @responseMessage NVARCHAR(250)='' OUTPUT
+AS
+BEGIN
+
+    SET NOCOUNT ON
+
+    DECLARE @PasswordID INT
+
+    IF EXISTS (SELECT TOP 1 MemberID FROM Passwords WHERE LoginName=@LoginName)
+    BEGIN
+        SET @PasswordID=(SELECT MemberID FROM Passwords 
+		WHERE LoginName=@LoginName AND PasswordHash=HASHBYTES('SHA2-256', @Password))
+
+       IF @PasswordID IS NOT NULL
+           SET @responseMessage = 'Error: Username or Password is incorrect'
+       ELSE 
+           SET @responseMessage='Logged in..Loading Page'
+   END
+       ELSE
+           SET @responseMessage='Error: Username or Password is incorrect'
+
+END
+--===============================================================================
+GO
+--Test the UserAccount procedure
+BEGIN
+DECLARE	@responseMessage nvarchar(250)
+
+--Correct Login:
+
+
+EXEC	sp_UserAccount
+		@LoginName = 'bfallon0@artisteer.com',
+		@Password = 'Cheese',
+		@responseMessage = @responseMessage OUTPUT
+
+		SELECT	@responseMessage [Incorrect Username or Password]
+
+--Incorrect Login:
+EXEC	sp_UserAccount
+		@LoginName = 'b2fallon0@artisteer.com', 
+		@Password = 'Cheese' ,
+		@responseMessage = @responseMessage OUTPUT
+		
+		SELECT	@responseMessage [Incorect Username or Password]
+
+--Incorrect Password:
+EXEC	sp_UserAccount
+		@LoginName = 'bfallon0@artisteer.com' , 
+		@Password =  'BadCheese',
+		@responseMessage = @responseMessage OUTPUT
+
+		SELECT	@responseMessage [Incorrect Password]
+
+end
+ 
+
+
 PRINT 'DATABASE LOADED SUCCESSFULLY'
+PRINT 'LET THE MAGIC BEGIN MYSTICAL CREATURE'
