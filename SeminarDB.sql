@@ -156,7 +156,8 @@ INSERT INTO Renewal (RenewalType, RenewalPrice)
 VALUES ('2 Year Plan', 189.00),
 		('1 Year Plan', 99.00),
 		('Quarterly', 27.00),
-		('Monthly', 9.99)
+		('Monthly', 9.99),
+		('Free', 0.00)
 
 
 
