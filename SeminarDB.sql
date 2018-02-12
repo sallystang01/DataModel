@@ -620,6 +620,7 @@ CREATE TABLE Passwords
     PasswordHash BINARY(64) NOT NULL,
     FirstName NVARCHAR(40) NULL,
     LastName NVARCHAR(40) NULL,
+	ChangeDate date not null DEFAULT getdate(),
     CONSTRAINT [PK_Member_MemberID] PRIMARY KEY CLUSTERED (MemberID ASC)
 )
 	
@@ -651,7 +652,7 @@ END
 
 --	DECLARE @responseMessage NVARCHAR(250)
 
---EXEC NewPassword
+--EXEC sp_NewPassword
 --          @pLogin = 'bfallon0@artisteer.com',
 --          @pPassword = 'Cheese',
 --          @pFirstName = 'Otis',
