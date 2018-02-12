@@ -600,4 +600,55 @@ group by e.EventID, e.EventName, e.EventDate
 END 
 GO
 
+--Passwords table where passwords are stored
+
+CREATE TABLE Passwords
+(
+    MemberID INT IDENTITY(1,1) NOT NULL,
+    LoginName NVARCHAR(40) NOT NULL,
+    PasswordHash BINARY(64) NOT NULL,
+    FirstName NVARCHAR(40) NULL,
+    LastName NVARCHAR(40) NULL,
+    CONSTRAINT [PK_Member_MemberID] PRIMARY KEY CLUSTERED (MemberID ASC)
+)
+	
+	GO
+	--Password Procedure that inserts new password
+CREATE PROCEDURE NewPassword
+    @pLogin NVARCHAR(50), 
+    @pPassword NVARCHAR(50), 
+    @pFirstName NVARCHAR(40) = NULL, 
+    @pLastName NVARCHAR(40) = NULL,
+    @responseMessage NVARCHAR(250) OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON
+
+    BEGIN 
+
+        INSERT INTO Passwords(LoginName, PasswordHash, FirstName, LastName)
+        VALUES(@pLogin, HASHBYTES('SHA2_256', @pPassword), @pFirstName, @pLastName)
+
+        SET @responseMessage='Success'
+
+    END
+   
+
+END
+	
+--TEST TO MAKE SURE PASSWORD PROCEDURE WORKS
+
+--	DECLARE @responseMessage NVARCHAR(250)
+
+--EXEC NewPassword
+--          @pLogin = 'bfallon0@artisteer.com',
+--          @pPassword = 'Cheese',
+--          @pFirstName = 'Otis',
+--          @pLastName = 'Fallon',
+--          @responseMessage=@responseMessage OUTPUT
+
+--SELECT *
+--FROM Passwords
+
+
 PRINT 'DATABASE LOADED SUCCESSFULLY'
