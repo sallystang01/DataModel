@@ -531,6 +531,55 @@ select concat(lastname, ', ', firstname) [Member Name],  BirthDate
 from Members
 where DATENAME(month, birthdate) = DATENAME(month, getdate())
 GO
+--===========================Event Information===========================--
+CREATE VIEW [dbo].[vwEventInformation] WITH SCHEMABINDING
+AS
+select ea.EventID,max(e.EventName) [Event Name], max(e.EDescription) [Event Description], 
+		concat(max(h.firstname), ' ',max(h.lastname)) [Organizer], 
+		count(ea.PresentStatus) [Amount Attended]
+from [dbo].[EventAttendance] ea
+inner join
+[dbo].Events e
+on e.EventID = ea.EventID
+inner join
+[dbo].Host h
+on h.HostID = e.HostID
+where ea.PresentStatus <> 0
+group by ea.EventID
+
+GO
+
+--Tried to drop table and received the following error:
+--	Msg 3729, Level 16, State 1, Line 552
+--	Cannot DROP TABLE 'EventAttendance' because it is being referenced by object 'vwEventInformation'.
+
+--===========================PaidCurrentMembers===========================--
+
+CREATE VIEW vwPaidCurrentMembers
+AS
+select m.MemberID, m.MemberNumber, concat(m.firstname, ' ',m.middlename, ' ', m.lastname) [Member Name],
+		m.Email, m.Phone, m.Gender, m.StartDate, m.CurrentFlag, m.BirthDate, mi.Interest, 
+		ma.AddressLine1, ma.AddressLine2, ma.AddressType, ma.City, ma.StateProvince, ma.PostalCode
+		
+					
+from Members m
+inner join
+MemberAddress ma
+on m.MemberID = ma.MemberID
+inner join
+MemberInterest mi
+on mi.MemberID = m.MemberID
+where m.CurrentFlag <> 0 and m.RenewalID <> 5
+WITH CHECK OPTION
+GO
+
+--delete from vwPaidCurrentMembers
+--where MemberID = 1
+
+--  RECEIVES AN ERROR:
+-- Msg 4405, Level 16, State 1, Line 576
+-- View or function 'vwPaidCurrentMembers' is not updatable because the modification affects multiple base tables.
+
 
 --===========================Renewals===========================--
 
@@ -564,7 +613,7 @@ where CardExpiration < GETDATE()
 GO
 
 --===========================Monthly Income===========================--
-CREATE PROCEDURE sp_MonthlyIncome
+CREATE PROCEDURE sp_MonthlyIncome --'2016-01-01', '2017-01-01'
 	
 	@StartDate date,
 	@EndDate date
@@ -572,7 +621,7 @@ CREATE PROCEDURE sp_MonthlyIncome
 	BEGIN
 select sum(t.charge) [Income]
 from Transactions t
-where t.TransactionDate between @StartDate and @EndDate
+where t.TransactionDate between @StartDate and @EndDate 
 
 END 
 
@@ -616,19 +665,22 @@ GO
 
 CREATE TABLE Passwords
 (
-    MemberID INT IDENTITY(1,1) NOT NULL,
+    PasswordID INT IDENTITY(1,1) NOT NULL,
+	MemberID INT NOT NULL,
     LoginName NVARCHAR(40) NOT NULL,
     PasswordHash BINARY(64) NOT NULL,
     FirstName NVARCHAR(40) NULL,
     LastName NVARCHAR(40) NULL,
 	ChangeDate date not null DEFAULT getdate(),
-    CONSTRAINT [PK_Member_MemberID] PRIMARY KEY CLUSTERED (MemberID ASC)
+	PRIMARY KEY (PasswordID),
+    CONSTRAINT FK_Member_MemberID FOREIGN KEY (MemberID) REFERENCES Members(MemberID)
 )
 	
 	GO
 	--Password Procedure that inserts new password
 CREATE PROCEDURE sp_NewPassword
-    @pLogin NVARCHAR(50), 
+    @MemberID int,
+	@pLogin NVARCHAR(50), 
     @pPassword NVARCHAR(50), 
     @pFirstName NVARCHAR(40) = NULL, 
     @pLastName NVARCHAR(40) = NULL,
@@ -639,8 +691,8 @@ BEGIN
 
     BEGIN 
 
-        INSERT INTO Passwords(LoginName, PasswordHash, FirstName, LastName)
-        VALUES(@pLogin, HASHBYTES('SHA2_256', @pPassword), @pFirstName, @pLastName)
+        INSERT INTO Passwords(MemberID,LoginName, PasswordHash, FirstName, LastName)
+        VALUES(@MemberID,@pLogin, HASHBYTES('SHA2_256', @pPassword), @pFirstName, @pLastName)
 
         SET @responseMessage='Success'
 
@@ -655,6 +707,7 @@ END
 
 --EXEC sp_NewPassword
 --          @pLogin = 'bfallon0@artisteer.com',
+--			@MemberID = 1
 --          @pPassword = 'Cheese',
 --          @pFirstName = 'Otis',
 --          @pLastName = 'Fallon',
@@ -727,6 +780,7 @@ EXEC	sp_UserAccount
 end
  
 
-
+ 
 PRINT 'DATABASE LOADED SUCCESSFULLY'
-PRINT 'LET THE MAGIC BEGIN MYSTICAL CREATURE'
+
+
