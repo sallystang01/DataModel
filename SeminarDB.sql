@@ -91,49 +91,87 @@ CONSTRAINT FK_CardIDnotSupplied FOREIGN KEY (CardID)
 REFERENCES PaymentCard(CardID)
 )
 
-CREATE TABLE Host
+CREATE TABLE StaffType
 (
-HostID int not null IDENTITY(1, 1),
+StaffTypeID int not null IDENTITY(1, 1),
+StaffTitle varchar(50) not null,
+PRIMARY KEY(StaffTypeID)
+)
+
+CREATE TABLE Staff
+(
+StaffID int not null IDENTITY(1, 1),
 FirstName varchar(50) not null,
 MiddleName varchar(50),
 LastName varchar(50) not null,
+StaffType int not null,
 Email varchar(30) not null,
 Phone varchar(15) not null,
 Gender varchar(10) not null,
 StartDate date not null,
 CurrentFlag bit not null,
 BirthDate date not null,
-PRIMARY KEY (HostID)
+PRIMARY KEY (StaffID),
+CONSTRAINT FK_StaffTypeNotFound FOREIGN KEY (StaffType)
+REFERENCES StaffType(StaffTypeID)
 )
 
-CREATE TABLE HostAddress
+CREATE TABLE StaffAddress
 (
 AddressID int not null IDENTITY(1, 1),
-HostID int not null,
+StaffID int not null,
 AddressLine1 varchar(50) not null,
 AddressLIne2 varchar(50),
 City varchar(35) not null,
 StateProvince varchar(25) not null,
 PostalCode varchar(15) not null,
 PRIMARY KEY (AddressID),
-CONSTRAINT FK_HostNotSupplied FOREIGN KEY (HostID)
-REFERENCES Host(HostID)
+CONSTRAINT FK_StaffNotSupplied FOREIGN KEY (StaffID)
+REFERENCES Staff(StaffID)
 )
 
-CREATE TABLE [Events]
+CREATE TABLE Series
+(
+SeriesID int not null IDENTITY(1, 1),
+SeriesName varchar(250) not null,
+SeriesDescription varchar(250) not null,
+StartDate date not null,
+EndDate date not null,
+SeriesAdmin int not null,
+PRIMARY KEY (SeriesID),
+CONSTRAINT FK_SeriesAdminNotFound FOREIGN KEY (SeriesAdmin)
+REFERENCES Staff(StaffID)
+)
+
+
+CREATE TABLE SeminarEvents
 (
 EventID int not null IDENTITY(1, 1),
-HostID int not null,
+StaffID int not null,
 EventName varchar(100) not null,
 EventDate date not null,
 StartTime time(1) not null,
 EndTime time(1) not null,
+SeriesFlag bit not null,
 EDescription varchar(1000) not null,
 Comments varchar(1000),
 PRIMARY KEY (EventID),
-CONSTRAINT FK_MissingHost FOREIGN KEY (HostID)
-REFERENCES Host(HostID)
+CONSTRAINT FK_MissingStaff FOREIGN KEY (StaffID)
+REFERENCES Staff(StaffID)
+
 )
+
+CREATE TABLE SeminarEventSeries
+(
+SeriesID int not null,
+EventID int not null,
+PRIMARY KEY (SeriesID, EventID),
+CONSTRAINT FK_EventID FOREIGN KEY (EventID)
+REFERENCES SeminarEvents(EventID),
+CONSTRAINT FK_SeriesID FOREIGN KEY (SeriesID)
+REFERENCES Series(SeriesID)
+)
+
 
 CREATE TABLE EventAttendance
 (
@@ -143,10 +181,12 @@ MemberID int not null,
 PresentStatus bit not null,
 PRIMARY KEY (AttendanceID),
 CONSTRAINT FK_MissingEvent FOREIGN KEY (EventID)
-REFERENCES [Events](EventID),
+REFERENCES SeminarEvents(EventID),
 CONSTRAINT FK_MissingMember FOREIGN KEY (MemberID)
 REFERENCES Members(MemberID)
 )
+
+
 
 
 --==============================================INSERTS========================================================--
@@ -245,26 +285,31 @@ INSERT INTO MemberInterest (MemberID, Interest)
 ('15',	'Reading'),
 ('15',	'Pottery')
 
-INSERT INTO Host (FirstName, MiddleName, LastName, Email, Phone, Gender, StartDate, CurrentFlag, BirthDate)
-	VALUES ('Tiffany',	'Watt',	'Smith',	'tiffanywatt2@gmail.com',	'352-123-4567',	'Female',	'2016-01-01',	'1',	'1974-04-13'),
-('Simon',	null,	'Sinek',	'simon2@gmail.com',	'352-542-1234',	'Male',	'2016-01-01',	'1',	'1983-12-12'),
-('Dan',	null,	'Pink',	'dan2@gmail.com',	'352-929-0101',	'Male',	'2016-01-01',	'1',	'1989-02-03'),
-('Elizabeth',	null,	'Gilbert',	'elizabeth2@gmail.com',	'352-112-1212',	'Female',	'2016-01-01',	'1',	'1964-07-01'),
-('Andrew',	null,	'Comeau',	'andrew2@gmail.com',	'352-313-3142',	'Male',	'2016-01-01',	'1',	'1991-09-12')
+INSERT INTO StaffType (StaffTitle)
+	VALUES ('EventHost'),
+			('SeriesAdmin')
 
-INSERT INTO HostAddress (HostID, AddressLine1, AddressLIne2, City, StateProvince, PostalCode)
+INSERT INTO Staff (FirstName, MiddleName, LastName, StaffType, Email, Phone, Gender, StartDate, CurrentFlag, BirthDate)
+	VALUES ('Tiffany',	'Watt',	'Smith', 1, 'tiffanywatt2@gmail.com',	'352-123-4567',	'Female',	'2016-01-01',	'1',	'1974-04-13'),
+('Simon',	null,	'Sinek', 1,	'simon2@gmail.com',	'352-542-1234',	'Male',	'2016-01-01',	'1',	'1983-12-12'),
+('Dan',	null,	'Pink',	1,'dan2@gmail.com',	'352-929-0101',	'Male',	'2016-01-01',	'1',	'1989-02-03'),
+('Elizabeth',	null,	'Gilbert',1,	'elizabeth2@gmail.com',	'352-112-1212',	'Female',	'2016-01-01',	'1',	'1964-07-01'),
+('Andrew',	null,	'Comeau',1,	'andrew2@gmail.com',	'352-313-3142',	'Male',	'2016-01-01',	'1',	'1991-09-12')
+
+INSERT INTO StaffAddress (StaffID, AddressLine1, AddressLIne2, City, StateProvince, PostalCode)
 	VALUES (1, '942 76th Street', null, 'Ocala', 'Florida', '34470'),
 			(2, '832 Magnolia Avenue', null, 'Ocala', 'Florida', '34470'),
 			(3, '11234 98th Circle', null, 'Ocala', 'Florida', '34470'),
 			(4, '903 Highway 441', null, 'Ocala', 'Florida', '34470'),
 			(5, '1337 Programming Street', null, 'Ocala', 'Florida', '34470')
 
-INSERT INTO [Events] (HostID, EventName, EventDate, StartTime, EndTime, EDescription, Comments)
-	VALUES ('1',	'The History of Human Emotions',	'2017-01-12',	'12:00',	'2:00',	'History of human emotions',	'This will be fun'),
-('2',	'How Great Leaders Inspire Action',	'2017-02-22',	'12:00',	'1:00',	'How great leaders inspire action',	'Helpful class and inspiration'),
-('3',	'The Puzzle of Motivation',	'2017-03-05',	'12:00',	'3:00',	'Motivational',	'Motivate people'),
-('4',	'Your Elusive Creative Genius',	'2017-04-16',	'12:00',	'2:00',	'Learn to become a genius!',	'Thinking Skills'),
-('5',	'Why are Programmers So Smart?',	'2017-05-01',	'12:00',	'2:30',	'Overview of how smart programmers are',	'Programmers are awesome')
+INSERT INTO SeminarEvents (StaffID, EventName, EventDate, StartTime, EndTime, SeriesFlag, EDescription, Comments)
+	VALUES ('1',	'The History of Human Emotions',	'2017-01-12',	'12:00',	'2:00', 0,	'History of human emotions',	'This will be fun'),
+('2',	'How Great Leaders Inspire Action',	'2017-02-22',	'12:00',	'1:00',0,	'How great leaders inspire action',	'Helpful class and inspiration'),
+('3',	'The Puzzle of Motivation',	'2017-03-05',	'12:00',	'3:00',0,	'Motivational',	'Motivate people'),
+('4',	'Your Elusive Creative Genius',	'2017-04-16',	'12:00',	'2:00',0,	'Learn to become a genius!',	'Thinking Skills'),
+('5',	'Why are Programmers So Smart?',	'2017-05-01',	'12:00',	'2:30',	0,'Overview of how smart programmers are',	'Programmers are awesome')
+
 
 INSERT INTO EventAttendance (EventID, MemberID, PresentStatus)
 	VALUES (1, 1, 0),
@@ -539,11 +584,11 @@ select ea.EventID,max(e.EventName) [Event Name], max(e.EDescription) [Event Desc
 		count(ea.PresentStatus) [Amount Attended]
 from [dbo].[EventAttendance] ea
 inner join
-[dbo].Events e
+[dbo].SeminarEvents e
 on e.EventID = ea.EventID
 inner join
-[dbo].Host h
-on h.HostID = e.HostID
+[dbo].Staff h
+on h.StaffID = e.StaffID
 where ea.PresentStatus <> 0
 group by ea.EventID
 
@@ -559,9 +604,7 @@ CREATE VIEW vwPaidCurrentMembers
 AS
 select m.MemberID, m.MemberNumber, concat(m.firstname, ' ',m.middlename, ' ', m.lastname) [Member Name],
 		m.Email, m.Phone, m.Gender, m.StartDate, m.CurrentFlag, m.BirthDate, mi.Interest, 
-		ma.AddressLine1, ma.AddressLine2, ma.AddressType, ma.City, ma.StateProvince, ma.PostalCode
-		
-					
+		ma.AddressLine1, ma.AddressLine2, ma.AddressType, ma.City, ma.StateProvince, ma.PostalCode, m.RenewalID			
 from Members m
 inner join
 MemberAddress ma
@@ -573,6 +616,9 @@ where m.CurrentFlag <> 0 and m.RenewalID <> 5
 WITH CHECK OPTION
 GO
 
+
+
+
 --delete from vwPaidCurrentMembers
 --where MemberID = 1
 
@@ -580,6 +626,16 @@ GO
 -- Msg 4405, Level 16, State 1, Line 576
 -- View or function 'vwPaidCurrentMembers' is not updatable because the modification affects multiple base tables.
 
+
+--update vwPaidCurrentMembers
+--set renewalid = 5
+--where memberid = 1
+
+-- RECEIVES AN ERROR:
+
+-- Msg 550, Level 16, State 1, Line 585
+--The attempted insert or update failed because the target view either specifies WITH CHECK OPTION or spans a view that specifies WITH CHECK OPTION and one or more rows resulting from the operation did not qualify under the CHECK OPTION constraint.
+--The statement has been terminated.
 
 --===========================Renewals===========================--
 
@@ -653,7 +709,7 @@ CREATE PROCEDURE sp_AttendancePerEvent
 select e.EventID, count(memberid) [Amount Attended], e.EventName, e.EventDate
 from EventAttendance ea
 inner join
-[Events] e
+SeminarEvents e
 on e.EventID = ea.EventID
 where e.EventDate between @StartDate and @EndDate
 group by e.EventID, e.EventName, e.EventDate
