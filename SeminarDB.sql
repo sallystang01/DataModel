@@ -129,21 +129,6 @@ PRIMARY KEY (AddressID),
 CONSTRAINT FK_StaffNotSupplied FOREIGN KEY (StaffID)
 REFERENCES Staff(StaffID)
 )
-
-CREATE TABLE Series
-(
-SeriesID int not null IDENTITY(1, 1),
-SeriesName varchar(250) not null,
-SeriesDescription varchar(250) not null,
-StartDate date not null,
-EndDate date not null,
-SeriesAdmin int not null,
-PRIMARY KEY (SeriesID),
-CONSTRAINT FK_SeriesAdminNotFound FOREIGN KEY (SeriesAdmin)
-REFERENCES Staff(StaffID)
-)
-
-
 CREATE TABLE SeminarEvents
 (
 EventID int not null IDENTITY(1, 1),
@@ -161,16 +146,24 @@ REFERENCES Staff(StaffID)
 
 )
 
-CREATE TABLE SeminarEventSeries
+CREATE TABLE Series
 (
-SeriesID int not null,
+SeriesID int not null IDENTITY(1, 1),
 EventID int not null,
-PRIMARY KEY (SeriesID, EventID),
-CONSTRAINT FK_EventID FOREIGN KEY (EventID)
-REFERENCES SeminarEvents(EventID),
-CONSTRAINT FK_SeriesID FOREIGN KEY (SeriesID)
-REFERENCES Series(SeriesID)
+SeriesName varchar(250) not null,
+SeriesDescription varchar(250) not null,
+StartDate date not null,
+EndDate date not null,
+SeriesAdmin int not null,
+PRIMARY KEY (SeriesID),
+CONSTRAINT FK_SeriesAdminNotFound FOREIGN KEY (SeriesAdmin)
+REFERENCES Staff(StaffID),
+CONSTRAINT FK_SeminarEventNotFound FOREIGN KEY (EventID)
+REFERENCES SeminarEvents(EventID)
 )
+
+
+
 
 
 CREATE TABLE EventAttendance
@@ -482,6 +475,11 @@ INSERT INTO Transactions (CardID, TransactionDate, Charge, Result)
 ('112',	'2018-01-25',	'27',	'Approved'),
 ('114',	'2018-01-27',	'9.99',	'Approved')
 
+INSERT INTO Staff (FirstName, MiddleName, LastName, StaffType, Email, Phone, Gender, StartDate, CurrentFlag, BirthDate)
+				VALUES ('Meg', 'Riley', 'Lorett', 2, 'mlorett@gmail.com', '305-213-3323', 'Female', '2018-02-14',
+					1, '1872-01-01')
+INSERT INTO StaffAddress (StaffID, AddressLine1, City, StateProvince, PostalCode)
+		VALUES (6, '119 11th Street', 'Miami', 'Florida', '33101')
 
 --=============================================------------
 
@@ -833,7 +831,7 @@ EXEC	sp_UserAccount
 
 		SELECT	@responseMessage [Incorrect Password]
 
-end
+END
  
 
  
