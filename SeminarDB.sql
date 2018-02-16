@@ -91,12 +91,7 @@ CONSTRAINT FK_CardIDnotSupplied FOREIGN KEY (CardID)
 REFERENCES PaymentCard(CardID)
 )
 
-CREATE TABLE StaffType
-(
-StaffTypeID int not null IDENTITY(1, 1),
-StaffTitle varchar(50) not null,
-PRIMARY KEY(StaffTypeID)
-)
+
 
 CREATE TABLE Staff
 (
@@ -104,7 +99,6 @@ StaffID int not null IDENTITY(1, 1),
 FirstName varchar(50) not null,
 MiddleName varchar(50),
 LastName varchar(50) not null,
-StaffType int not null,
 Email varchar(30) not null,
 Phone varchar(15) not null,
 Gender varchar(10) not null,
@@ -112,8 +106,7 @@ StartDate date not null,
 CurrentFlag bit not null,
 BirthDate date not null,
 PRIMARY KEY (StaffID),
-CONSTRAINT FK_StaffTypeNotFound FOREIGN KEY (StaffType)
-REFERENCES StaffType(StaffTypeID)
+
 )
 
 CREATE TABLE StaffAddress
@@ -143,7 +136,6 @@ Comments varchar(1000),
 PRIMARY KEY (EventID),
 CONSTRAINT FK_MissingStaff FOREIGN KEY (StaffID)
 REFERENCES Staff(StaffID)
-
 )
 
 CREATE TABLE Series
@@ -179,7 +171,16 @@ CONSTRAINT FK_MissingMember FOREIGN KEY (MemberID)
 REFERENCES Members(MemberID)
 )
 
-
+CREATE TABLE SeminarInterest
+(
+EventID int not null,
+InterestID int not null,
+PRIMARY KEY (EventID, InterestID),
+CONSTRAINT FK_EventNotFound FOREIGN KEY (EventID)
+REFERENCES SeminarEvents(EventID),
+CONSTRAINT FK_InterestNotDetected FOREIGN KEY (InterestID)
+REFERENCES MemberInterest(InterestID)
+)
 
 
 --==============================================INSERTS========================================================--
@@ -278,16 +279,13 @@ INSERT INTO MemberInterest (MemberID, Interest)
 ('15',	'Reading'),
 ('15',	'Pottery')
 
-INSERT INTO StaffType (StaffTitle)
-	VALUES ('EventHost'),
-			('SeriesAdmin')
 
-INSERT INTO Staff (FirstName, MiddleName, LastName, StaffType, Email, Phone, Gender, StartDate, CurrentFlag, BirthDate)
-	VALUES ('Tiffany',	'Watt',	'Smith', 1, 'tiffanywatt2@gmail.com',	'352-123-4567',	'Female',	'2016-01-01',	'1',	'1974-04-13'),
-('Simon',	null,	'Sinek', 1,	'simon2@gmail.com',	'352-542-1234',	'Male',	'2016-01-01',	'1',	'1983-12-12'),
-('Dan',	null,	'Pink',	1,'dan2@gmail.com',	'352-929-0101',	'Male',	'2016-01-01',	'1',	'1989-02-03'),
-('Elizabeth',	null,	'Gilbert',1,	'elizabeth2@gmail.com',	'352-112-1212',	'Female',	'2016-01-01',	'1',	'1964-07-01'),
-('Andrew',	null,	'Comeau',1,	'andrew2@gmail.com',	'352-313-3142',	'Male',	'2016-01-01',	'1',	'1991-09-12')
+INSERT INTO Staff (FirstName, MiddleName, LastName, Email, Phone, Gender, StartDate, CurrentFlag, BirthDate)
+	VALUES ('Tiffany',	'Watt',	'Smith',  'tiffanywatt2@gmail.com',	'352-123-4567',	'Female',  	'2016-01-01',	1,'1974-04-13'),
+('Simon',	null,	'Sinek', 	'simon2@gmail.com',	'352-542-1234',	'Male',	'2016-01-01',1,	'1983-12-12'),
+('Dan',	null,	'Pink',	'dan2@gmail.com',	'352-929-0101',	'Male',	'2016-01-01',1,	'1989-02-03'),
+('Elizabeth',	null,	'Gilbert',	'elizabeth2@gmail.com',	'352-112-1212',	'Female',	'2016-01-01',	1,	'1964-07-01'),
+('Andrew',	null,	'Comeau',	'andrew2@gmail.com',	'352-313-3142',	'Male',	'2016-01-01',1,	'1991-09-12')
 
 INSERT INTO StaffAddress (StaffID, AddressLine1, AddressLIne2, City, StateProvince, PostalCode)
 	VALUES (1, '942 76th Street', null, 'Ocala', 'Florida', '34470'),
@@ -475,8 +473,8 @@ INSERT INTO Transactions (CardID, TransactionDate, Charge, Result)
 ('112',	'2018-01-25',	'27',	'Approved'),
 ('114',	'2018-01-27',	'9.99',	'Approved')
 
-INSERT INTO Staff (FirstName, MiddleName, LastName, StaffType, Email, Phone, Gender, StartDate, CurrentFlag, BirthDate)
-				VALUES ('Meg', 'Riley', 'Lorett', 2, 'mlorett@gmail.com', '305-213-3323', 'Female', '2018-02-14',
+INSERT INTO Staff (FirstName, MiddleName, LastName,  Email, Phone, Gender, StartDate, CurrentFlag, BirthDate)
+				VALUES ('Meg', 'Riley', 'Lorett', 'mlorett@gmail.com', '305-213-3323', 'Female', '2018-02-14',
 					1, '1872-01-01')
 INSERT INTO StaffAddress (StaffID, AddressLine1, City, StateProvince, PostalCode)
 		VALUES (6, '119 11th Street', 'Miami', 'Florida', '33101')
@@ -485,64 +483,64 @@ INSERT INTO StaffAddress (StaffID, AddressLine1, City, StateProvince, PostalCode
 
 --Creates a view that displays all members and their required information that are due for a renewal.
 --I created this to make my stored procedure simple.
-GO
-CREATE VIEW vwRenewal
-AS
-select m.memberid, m.FirstName, m.LastName, m.StartDate, m.RenewalID, r.RenewalPrice, pc.CardID
-from Members m
-inner join
-Renewal r
-on m.RenewalID = r.RenewalID
-inner join
-PaymentCard pc
-on pc.MemberID = m.MemberID
-WHERE m.CurrentFlag <> 0 AND m.RenewalID = 4
-	AND DATEPART(day, startdate) = DATEPART(day, getdate())
+		GO
+		CREATE VIEW vwRenewal
+		AS
+		select m.memberid, m.FirstName, m.LastName, m.StartDate, m.RenewalID, r.RenewalPrice, pc.CardID
+		from Members m
+		inner join
+		Renewal r
+		on m.RenewalID = r.RenewalID
+		inner join
+		PaymentCard pc
+		on pc.MemberID = m.MemberID
+		WHERE m.CurrentFlag <> 0 AND m.RenewalID = 4
+			AND DATEPART(day, startdate) = DATEPART(day, getdate())
 
-	UNION ALL
-select m.memberid, m.FirstName, m.LastName, m.StartDate, m.RenewalID, r.RenewalPrice, pc.CardID
-from Members m
-inner join
-Renewal r
-on m.RenewalID = r.RenewalID
-inner join
-PaymentCard pc
-on pc.MemberID = m.MemberID
-WHERE m.CurrentFlag <> 0 AND m.RenewalID = 3
-	AND DATEPART(day, startdate) = DATEPART(day, getdate())
-	AND DATEPART(month, GETDATE()) IN
-		((select (datepart(month, m.startdate) + 3)),
-		(select (datepart(month, m.startdate) + 6)),
-		(select (datepart(month, m.startdate) + 9)))
-UNION ALL
+			UNION ALL
+		select m.memberid, m.FirstName, m.LastName, m.StartDate, m.RenewalID, r.RenewalPrice, pc.CardID
+		from Members m
+		inner join
+		Renewal r
+		on m.RenewalID = r.RenewalID
+		inner join
+		PaymentCard pc
+		on pc.MemberID = m.MemberID
+		WHERE m.CurrentFlag <> 0 AND m.RenewalID = 3
+			AND DATEPART(day, startdate) = DATEPART(day, getdate())
+			AND DATEPART(month, GETDATE()) IN
+				((select (datepart(month, m.startdate) + 3)),
+				(select (datepart(month, m.startdate) + 6)),
+				(select (datepart(month, m.startdate) + 9)))
+		UNION ALL
 
-select m.memberid, m.FirstName, m.LastName, m.StartDate, m.RenewalID, r.RenewalPrice, pc.CardID
-from Members m
-inner join
-Renewal r
-on m.RenewalID = r.RenewalID
-inner join
-PaymentCard pc
-on pc.MemberID = m.MemberID
-WHERE m.CurrentFlag <> 0 AND m.RenewalID = 2
-	AND DATEPART(day, startdate) = DATEPART(day, getdate())
-	AND DATEPART(month, startdate) = DATEPART(month, getdate())
-UNION 
-ALL
-select m.memberid, m.FirstName, m.LastName, m.StartDate, m.RenewalID, r.RenewalPrice, pc.CardID
-from Members m
-inner join
-Renewal r
-on m.RenewalID = r.RenewalID
-inner join
-PaymentCard pc
-on pc.MemberID = m.MemberID
-WHERE m.CurrentFlag <> 0 AND m.RenewalID = 1
-	AND GETDATE() IN
-	((SELECT dateadd(month, 24, m.startdate)),
-	(select dateadd(month, 48, m.startdate)),
-	(select dateadd(month, 72, m.startdate)))
-GO	
+		select m.memberid, m.FirstName, m.LastName, m.StartDate, m.RenewalID, r.RenewalPrice, pc.CardID
+		from Members m
+		inner join
+		Renewal r
+		on m.RenewalID = r.RenewalID
+		inner join
+		PaymentCard pc
+		on pc.MemberID = m.MemberID
+		WHERE m.CurrentFlag <> 0 AND m.RenewalID = 2
+			AND DATEPART(day, startdate) = DATEPART(day, getdate())
+			AND DATEPART(month, startdate) = DATEPART(month, getdate())
+		UNION 
+		ALL
+		select m.memberid, m.FirstName, m.LastName, m.StartDate, m.RenewalID, r.RenewalPrice, pc.CardID
+		from Members m
+		inner join
+		Renewal r
+		on m.RenewalID = r.RenewalID
+		inner join
+		PaymentCard pc
+		on pc.MemberID = m.MemberID
+		WHERE m.CurrentFlag <> 0 AND m.RenewalID = 1
+			AND GETDATE() IN
+			((SELECT dateadd(month, 24, m.startdate)),
+			(select dateadd(month, 48, m.startdate)),
+			(select dateadd(month, 72, m.startdate)))
+		GO	
 
 		
 --===========================CONTACT LIST===========================--
